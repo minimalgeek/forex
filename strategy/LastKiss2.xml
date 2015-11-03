@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
+<preferences EXTERNAL_XML_VERSION="1.0">
+  <root type="user">
+    <map/>
+    <node name="strat_pref_node">
+      <map/>
+      <node name="presets">
+        <map/>
+        <node name="preset@Test01">
+          <map>
+            <entry key="name" value="Test01"/>
+            <entry key="id" value="Test01"/>
+          </map>
+          <node name="parameter@adjacents">
+            <map>
+              <entry key="id" value="adjacents"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWait">
+            <map>
+              <entry key="id" value="candlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="14"/>
+            </map>
+          </node>
+          <node name="parameter@maxAllowedSize">
+            <map>
+              <entry key="id" value="maxAllowedSize"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@minCandlesToWait">
+            <map>
+              <entry key="id" value="minCandlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@multiplier">
+            <map>
+              <entry key="id" value="multiplier"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="Daily"/>
+            </map>
+          </node>
+          <node name="parameter@numberOfBars">
+            <map>
+              <entry key="id" value="numberOfBars"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="200"/>
+            </map>
+          </node>
+          <node name="parameter@slMultiplier">
+            <map>
+              <entry key="id" value="slMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.3"/>
+            </map>
+          </node>
+          <node name="parameter@tpMultiplier">
+            <map>
+              <entry key="id" value="tpMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.7"/>
+            </map>
+          </node>
+          <node name="parameter@turningPoints">
+            <map>
+              <entry key="id" value="turningPoints"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@zoneShrink">
+            <map>
+              <entry key="id" value="zoneShrink"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.7"/>
+            </map>
+          </node>
+        </node>
+      </node>
+    </node>
+  </root>
+</preferences>

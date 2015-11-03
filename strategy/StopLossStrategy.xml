@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
+<preferences EXTERNAL_XML_VERSION="1.0">
+  <root type="user">
+    <map/>
+    <node name="strat_pref_node">
+      <map/>
+      <node name="presets">
+        <map/>
+        <node name="preset@Setting_01">
+          <map>
+            <entry key="name" value="Setting_01"/>
+            <entry key="id" value="Setting_01"/>
+          </map>
+          <node name="parameter@addOHLC">
+            <map>
+              <entry key="id" value="addOHLC"/>
+              <entry key="type" value="boolean"/>
+              <entry key="value" value="true"/>
+            </map>
+          </node>
+          <node name="parameter@breakEventPips">
+            <map>
+              <entry key="id" value="breakEventPips"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="5.0"/>
+            </map>
+          </node>
+          <node name="parameter@closeChart">
+            <map>
+              <entry key="id" value="closeChart"/>
+              <entry key="type" value="boolean"/>
+              <entry key="value" value="false"/>
+            </map>
+          </node>
+          <node name="parameter@drawSMA">
+            <map>
+              <entry key="id" value="drawSMA"/>
+              <entry key="type" value="boolean"/>
+              <entry key="value" value="true"/>
+            </map>
+          </node>
+          <node name="parameter@filter">
+            <map>
+              <entry key="id" value="filter"/>
+              <entry key="type" value="com.dukascopy.api.Filter"/>
+              <entry key="value" value="WEEKENDS"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="10 Mins"/>
+            </map>
+          </node>
+          <node name="parameter@smaTimePeriod">
+            <map>
+              <entry key="id" value="smaTimePeriod"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="20"/>
+            </map>
+          </node>
+          <node name="parameter@stopLossPips">
+            <map>
+              <entry key="id" value="stopLossPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@takeProfitPips">
+            <map>
+              <entry key="id" value="takeProfitPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="20"/>
+            </map>
+          </node>
+        </node>
+      </node>
+    </node>
+  </root>
+</preferences>
