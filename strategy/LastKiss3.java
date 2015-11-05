@@ -25,7 +25,7 @@ import com.dukascopy.api.drawings.IHorizontalLineChartObject;
 import java.awt.Color;
 import java.util.*;
 
-public class LastKiss2 implements IStrategy {
+public class LastKiss3 implements IStrategy {
     
     private IEngine engine;
     private IConsole console;
@@ -81,9 +81,9 @@ public class LastKiss2 implements IStrategy {
     
     
     @Configurable("SL multiplier on belly")
-    public double slMultiplier = 0.7;
+    public double slMultiplier = 2.0;
     @Configurable("TP multiplier on belly")
-    public double tpMultiplier = 1.5;
+    public double tpMultiplier = 4.0;
     
     public void onStart(IContext context) throws JFException {
         this.engine = context.getEngine();
@@ -136,8 +136,8 @@ public class LastKiss2 implements IStrategy {
         }                 
 
         previousBar = history.getBar(myInstrument, myPeriod, myOfferSide, 1);
-        zoneBelly = getMaximumDifferenceForBar();
-        
+        //zoneBelly = getMaximumDifferenceForBar();
+        zoneBelly = myInstrument.getPipValue()*20;
         calculateZones();
         drawPrices();
         
@@ -148,7 +148,7 @@ public class LastKiss2 implements IStrategy {
         findCrossingBars();
     }
     
-    private double getMaximumDifferenceForBar() throws JFException {
+    /*private double getMaximumDifferenceForBar() throws JFException {
         List<IBar> bars = new ArrayList<IBar>();
         for (int i = 1; i <= numberOfBars; i++) { // we are not interested in the current bar, only in the completed ones
             bars.add(history.getBar(myInstrument, myPeriod, myOfferSide, i));
@@ -156,7 +156,7 @@ public class LastKiss2 implements IStrategy {
         
         Statistics stat = new Statistics(bars);
         return stat.getStdDev();
-    }
+    }*/
     
     private void calculateZones() throws JFException {
         List<IBar> localTurningPoints = findTurningPoints();
