@@ -58,12 +58,15 @@ public class LastKiss3 implements IStrategy {
     @Configurable(value="Period to search for zones")
     public Period myPeriodForZones = Period.ONE_HOUR;
     
+    
+    @Configurable(value="Belly pips")
+    public int bellyPips = 20;
     @Configurable("Range multiplier to identify new zones")
-    public double multiplier = 2;
+    public double multiplier = 2.0;
     @Configurable("Belly based zone shrink")
     public double zoneShrink = 0.2;
     
-    // Checked parameters
+
     @Configurable("Bars to check for zones")
     public int numberOfBars = 150;
     @Configurable("Nr. of adjacents on check close price")
@@ -81,9 +84,9 @@ public class LastKiss3 implements IStrategy {
     
     
     @Configurable("SL multiplier on belly")
-    public double slMultiplier = 2.0;
+    public double slMultiplier = 1.8;
     @Configurable("TP multiplier on belly")
-    public double tpMultiplier = 4.0;
+    public double tpMultiplier = 3.5;
     
     public void onStart(IContext context) throws JFException {
         this.engine = context.getEngine();
@@ -137,7 +140,7 @@ public class LastKiss3 implements IStrategy {
 
         previousBar = history.getBar(myInstrument, myPeriod, myOfferSide, 1);
         //zoneBelly = getMaximumDifferenceForBar();
-        zoneBelly = myInstrument.getPipValue()*20;
+        zoneBelly = myInstrument.getPipValue()*bellyPips;
         calculateZones();
         drawPrices();
         
