@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
+<preferences EXTERNAL_XML_VERSION="1.0">
+  <root type="user">
+    <map/>
+    <node name="strat_pref_node">
+      <map/>
+      <node name="presets">
+        <map/>
+        <node name="preset@*4h_1d">
+          <map>
+            <entry key="name" value="*4h_1d"/>
+            <entry key="id" value="*4h_1d"/>
+          </map>
+          <node name="parameter@adjacents">
+            <map>
+              <entry key="id" value="adjacents"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@bellyPips">
+            <map>
+              <entry key="id" value="bellyPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="150"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWait">
+            <map>
+              <entry key="id" value="candlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="15"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWaitOrder">
+            <map>
+              <entry key="id" value="candlesToWaitOrder"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="5"/>
+            </map>
+          </node>
+          <node name="parameter@maxAllowedSize">
+            <map>
+              <entry key="id" value="maxAllowedSize"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@minCandlesToWait">
+            <map>
+              <entry key="id" value="minCandlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="2"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriodForZones">
+            <map>
+              <entry key="id" value="myPeriodForZones"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="Daily"/>
+            </map>
+          </node>
+          <node name="parameter@numberOfBars">
+            <map>
+              <entry key="id" value="numberOfBars"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="300"/>
+            </map>
+          </node>
+          <node name="parameter@slMultiplier">
+            <map>
+              <entry key="id" value="slMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.5"/>
+            </map>
+          </node>
+          <node name="parameter@tpMultiplier">
+            <map>
+              <entry key="id" value="tpMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="1.0"/>
+            </map>
+          </node>
+          <node name="parameter@turningPoints">
+            <map>
+              <entry key="id" value="turningPoints"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@zoneShrink">
+            <map>
+              <entry key="id" value="zoneShrink"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.2"/>
+            </map>
+          </node>
+        </node>
+        <node name="preset@4H_Daily">
+          <map>
+            <entry key="name" value="4H_Daily"/>
+            <entry key="id" value="4H_Daily"/>
+          </map>
+          <node name="parameter@adjacents">
+            <map>
+              <entry key="id" value="adjacents"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@bellyPips">
+            <map>
+              <entry key="id" value="bellyPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="200"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWait">
+            <map>
+              <entry key="id" value="candlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="15"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWaitOrder">
+            <map>
+              <entry key="id" value="candlesToWaitOrder"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="5"/>
+            </map>
+          </node>
+          <node name="parameter@maxAllowedSize">
+            <map>
+              <entry key="id" value="maxAllowedSize"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@minCandlesToWait">
+            <map>
+              <entry key="id" value="minCandlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="2"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriodForZones">
+            <map>
+              <entry key="id" value="myPeriodForZones"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@numberOfBars">
+            <map>
+              <entry key="id" value="numberOfBars"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="200"/>
+            </map>
+          </node>
+          <node name="parameter@slMultiplier">
+            <map>
+              <entry key="id" value="slMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.5"/>
+            </map>
+          </node>
+          <node name="parameter@tpMultiplier">
+            <map>
+              <entry key="id" value="tpMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="1.5"/>
+            </map>
+          </node>
+          <node name="parameter@turningPoints">
+            <map>
+              <entry key="id" value="turningPoints"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@zoneShrink">
+            <map>
+              <entry key="id" value="zoneShrink"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.2"/>
+            </map>
+          </node>
+        </node>
+        <node name="preset@4h_4h">
+          <map>
+            <entry key="name" value="4h_4h"/>
+            <entry key="id" value="4h_4h"/>
+          </map>
+          <node name="parameter@adjacents">
+            <map>
+              <entry key="id" value="adjacents"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@bellyPips">
+            <map>
+              <entry key="id" value="bellyPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="100"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWait">
+            <map>
+              <entry key="id" value="candlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="15"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWaitOrder">
+            <map>
+              <entry key="id" value="candlesToWaitOrder"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="5"/>
+            </map>
+          </node>
+          <node name="parameter@maxAllowedSize">
+            <map>
+              <entry key="id" value="maxAllowedSize"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@minCandlesToWait">
+            <map>
+              <entry key="id" value="minCandlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="2"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriodForZones">
+            <map>
+              <entry key="id" value="myPeriodForZones"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@numberOfBars">
+            <map>
+              <entry key="id" value="numberOfBars"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="300"/>
+            </map>
+          </node>
+          <node name="parameter@slMultiplier">
+            <map>
+              <entry key="id" value="slMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.5"/>
+            </map>
+          </node>
+          <node name="parameter@tpMultiplier">
+            <map>
+              <entry key="id" value="tpMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="1.0"/>
+            </map>
+          </node>
+          <node name="parameter@turningPoints">
+            <map>
+              <entry key="id" value="turningPoints"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@zoneShrink">
+            <map>
+              <entry key="id" value="zoneShrink"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.2"/>
+            </map>
+          </node>
+        </node>
+        <node name="preset@Daily">
+          <map>
+            <entry key="name" value="Daily"/>
+            <entry key="id" value="Daily"/>
+          </map>
+          <node name="parameter@adjacents">
+            <map>
+              <entry key="id" value="adjacents"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@bellyPips">
+            <map>
+              <entry key="id" value="bellyPips"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="200"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWait">
+            <map>
+              <entry key="id" value="candlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="14"/>
+            </map>
+          </node>
+          <node name="parameter@candlesToWaitOrder">
+            <map>
+              <entry key="id" value="candlesToWaitOrder"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="5"/>
+            </map>
+          </node>
+          <node name="parameter@maxAllowedSize">
+            <map>
+              <entry key="id" value="maxAllowedSize"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="10"/>
+            </map>
+          </node>
+          <node name="parameter@minCandlesToWait">
+            <map>
+              <entry key="id" value="minCandlesToWait"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="2"/>
+            </map>
+          </node>
+          <node name="parameter@multiplier">
+            <map>
+              <entry key="id" value="multiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="2.0"/>
+            </map>
+          </node>
+          <node name="parameter@myInstrument">
+            <map>
+              <entry key="id" value="myInstrument"/>
+              <entry key="type" value="com.dukascopy.api.Instrument"/>
+              <entry key="value" value="EURUSD"/>
+            </map>
+          </node>
+          <node name="parameter@myOfferSide">
+            <map>
+              <entry key="id" value="myOfferSide"/>
+              <entry key="type" value="com.dukascopy.api.OfferSide"/>
+              <entry key="value" value="BID"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriod">
+            <map>
+              <entry key="id" value="myPeriod"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="4 Hours"/>
+            </map>
+          </node>
+          <node name="parameter@myPeriodForZones">
+            <map>
+              <entry key="id" value="myPeriodForZones"/>
+              <entry key="type" value="com.dukascopy.api.Period"/>
+              <entry key="value" value="Daily"/>
+            </map>
+          </node>
+          <node name="parameter@numberOfBars">
+            <map>
+              <entry key="id" value="numberOfBars"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="300"/>
+            </map>
+          </node>
+          <node name="parameter@slMultiplier">
+            <map>
+              <entry key="id" value="slMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.7"/>
+            </map>
+          </node>
+          <node name="parameter@tpMultiplier">
+            <map>
+              <entry key="id" value="tpMultiplier"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="1.5"/>
+            </map>
+          </node>
+          <node name="parameter@turningPoints">
+            <map>
+              <entry key="id" value="turningPoints"/>
+              <entry key="type" value="int"/>
+              <entry key="value" value="3"/>
+            </map>
+          </node>
+          <node name="parameter@zoneShrink">
+            <map>
+              <entry key="id" value="zoneShrink"/>
+              <entry key="type" value="double"/>
+              <entry key="value" value="0.2"/>
+            </map>
+          </node>
+        </node>
+      </node>
+    </node>
+  </root>
+</preferences>

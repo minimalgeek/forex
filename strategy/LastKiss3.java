@@ -40,6 +40,7 @@ public class LastKiss3 implements IStrategy {
     private long waitingTime;
     private long triggerWaitingTime;
     private double zoneBelly;
+    private double shrinkedZoneBelly;
     
     private IOrder order;
     private IChart openedChart;
@@ -58,17 +59,13 @@ public class LastKiss3 implements IStrategy {
     @Configurable(value="Period to search for zones")
     public Period myPeriodForZones = Period.ONE_HOUR;
     
-    
-    @Configurable(value="Belly pips")
-    public int bellyPips = 20;
-    @Configurable("Range multiplier to identify new zones")
-    public double multiplier = 2.0;
+    @Configurable("Belly pips")
+    public int bellyPips = 40;
     @Configurable("Belly based zone shrink")
     public double zoneShrink = 0.2;
-    
 
     @Configurable("Bars to check for zones")
-    public int numberOfBars = 150;
+    public int numberOfBars = 200;
     @Configurable("Nr. of adjacents on check close price")
     public int adjacents = 3;
     @Configurable("Nr. of necessary turning points")
@@ -78,15 +75,15 @@ public class LastKiss3 implements IStrategy {
     @Configurable("Candles to wait for kiss (min)")
     public int minCandlesToWait = 2;
     @Configurable("Candles to wait for kiss (max)")
-    public int candlesToWait = 14;
+    public int candlesToWait = 15;
     @Configurable("Candles to wait for trigger order")
     public int candlesToWaitOrder = 5;
     
     
     @Configurable("SL multiplier on belly")
-    public double slMultiplier = 1.8;
+    public double slMultiplier = 0.5;
     @Configurable("TP multiplier on belly")
-    public double tpMultiplier = 3.5;
+    public double tpMultiplier = 1.0;
     
     public void onStart(IContext context) throws JFException {
         this.engine = context.getEngine();
@@ -102,6 +99,9 @@ public class LastKiss3 implements IStrategy {
         
         resistanceBars = new LinkedList<IBar>();
         cog = null;
+        
+        zoneBelly = myInstrument.getPipValue()*bellyPips;
+        shrinkedZoneBelly = zoneBelly * zoneShrink;
         
         waitingTime = candlesToWait * myPeriod.getInterval();
         minimumWaitingTime = minCandlesToWait * myPeriod.getInterval();
@@ -139,8 +139,6 @@ public class LastKiss3 implements IStrategy {
         }                 
 
         previousBar = history.getBar(myInstrument, myPeriod, myOfferSide, 1);
-        //zoneBelly = getMaximumDifferenceForBar();
-        zoneBelly = myInstrument.getPipValue()*bellyPips;
         calculateZones();
         drawPrices();
         
@@ -151,16 +149,6 @@ public class LastKiss3 implements IStrategy {
         findCrossingBars();
     }
     
-    /*private double getMaximumDifferenceForBar() throws JFException {
-        List<IBar> bars = new ArrayList<IBar>();
-        for (int i = 1; i <= numberOfBars; i++) { // we are not interested in the current bar, only in the completed ones
-            bars.add(history.getBar(myInstrument, myPeriod, myOfferSide, i));
-        }
-        
-        Statistics stat = new Statistics(bars);
-        return stat.getStdDev();
-    }*/
-    
     private void calculateZones() throws JFException {
         List<IBar> localTurningPoints = findTurningPoints();
         
@@ -170,7 +158,7 @@ public class LastKiss3 implements IStrategy {
             for (IBar tempTurningPoint : localTurningPoints) {
                 if (tempTurningPoint != turningPoint) {
                     double difference = Math.abs(tempTurningPoint.getClose() - turningPoint.getClose());
-                    if (difference < zoneShrink*zoneBelly) {
+                    if (difference < shrinkedZoneBelly) {
                         nrOfSimilarPoint++;
                     }
                 }
@@ -186,21 +174,33 @@ public class LastKiss3 implements IStrategy {
         List<IBar> retList = new ArrayList<IBar>();
         for (int i = adjacents + 1; i <= numberOfBars; i++) { // we are not interested in the current bar, only in the completed ones
             IBar bar = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i);
+
+            boolean smallerTurningPoint = true, biggerTurningPoint = true;
             
-            boolean isTurningPoint = true;
-            Boolean previous = null;
-            for (int j = - adjacents; j <= adjacents; j++) {
-                if (j != 0) { // because it is the current bar what we check
-                    IBar tempBar = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i + j);
-                    if (previous != null && (tempBar.getClose() > bar.getClose()) != previous) {
-                        isTurningPoint = false;
-                        break;
+            for (int j = 1; j <= adjacents; j++) {
+                IBar tempBarPrev = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i - j);
+                IBar tempBarNext = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i + j);
+                
+                if (tempBarPrev.getClose() < bar.getClose() && tempBarNext.getClose() < bar.getClose()) {
+                    continue;
+                }
+                smallerTurningPoint = false;
+                break;
+            }
+            if (!smallerTurningPoint) {
+                for (int j = 1; j <= adjacents; j++) {
+                    IBar tempBarPrev = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i - j);
+                    IBar tempBarNext = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i + j);
+                    
+                    if (tempBarPrev.getClose() > bar.getClose() && tempBarNext.getClose() > bar.getClose()) {
+                        continue;
                     }
-                    previous = tempBar.getClose() > bar.getClose();
+                    biggerTurningPoint = false;
+                    break;
                 }
             }
             
-            if (isTurningPoint) {
+            if (smallerTurningPoint || biggerTurningPoint) {
                 retList.add(bar);
                 drawCircleOn(bar);
             }
@@ -212,15 +212,11 @@ public class LastKiss3 implements IStrategy {
     private boolean identifiableAsNewZone(IBar barToCheck) {
         for (IBar tempBar : resistanceBars) {
             double difference = Math.abs(tempBar.getClose() - barToCheck.getClose());
-            if (difference < getZoneDistance()) {
+            if (difference < zoneBelly) {
                 return false;
             }
         }
         return true;
-    }
-    
-    private double getZoneDistance() {
-        return multiplier * zoneBelly;
     }
     
     private void addToPriceList(IBar turningPoint) {
@@ -239,15 +235,17 @@ public class LastKiss3 implements IStrategy {
     
     private void findCrossingBars() throws JFException {
         for (IBar resBar : resistanceBars) {
-            if (isBull(previousBar) && crosses(resBar, previousBar)) {
-                cog = new CrossObjectGroup(previousBar, resBar, Cross.RESISTANCE);
-                drawUpOrDown("Res. cross ");
-                return;
-            }
-            if (isBear(previousBar) && crosses(resBar, previousBar)) {
-                cog = new CrossObjectGroup(previousBar, resBar, Cross.SUPPORT);
-                drawUpOrDown("Supp. cross ");
-                return;
+            if (crosses(resBar)) {
+                if (isBull(previousBar)) {
+                    cog = new CrossObjectGroup(previousBar, resBar, Cross.RESISTANCE);
+                    drawUpOrDown("Res. cross ");
+                    return;
+                }
+                if (isBear(previousBar)) {
+                    cog = new CrossObjectGroup(previousBar, resBar, Cross.SUPPORT);
+                    drawUpOrDown("Supp. cross ");
+                    return;
+                }
             }
         }
     }
@@ -289,11 +287,11 @@ public class LastKiss3 implements IStrategy {
                crossedClose < previousBar.getHigh(); // KISS
     }
     
-    private boolean crosses(IBar barWithClosePrice, IBar barToCheck) {
+    private boolean crosses(IBar barWithClosePrice) {
         double closePrice = barWithClosePrice.getClose();
         
-        return (barToCheck.getOpen() < closePrice && barToCheck.getClose() > closePrice) ||
-               (barToCheck.getClose() < closePrice && barToCheck.getOpen() > closePrice);
+        return (previousBar.getOpen() < closePrice && previousBar.getClose() > closePrice) ||
+               (previousBar.getClose() < closePrice && previousBar.getOpen() > closePrice);
     }
     
     // buy-sell functions
@@ -391,12 +389,12 @@ public class LastKiss3 implements IStrategy {
                 hLine.setText(barDate(bar));
                 openedChart.add(hLine);
                 
-                IHorizontalLineChartObject hLineSmall = factory.createHorizontalLine(label + "small", bar.getClose() - zoneBelly * zoneShrink);
+                IHorizontalLineChartObject hLineSmall = factory.createHorizontalLine(label + "small", bar.getClose() - shrinkedZoneBelly);
                 hLineSmall.setColor(Color.BLUE);
                 hLineSmall.setLineStyle(LineStyle.DOT);
                 openedChart.add(hLineSmall);
                 
-                IHorizontalLineChartObject hLineBig = factory.createHorizontalLine(label + "big", bar.getClose() + zoneBelly * zoneShrink);
+                IHorizontalLineChartObject hLineBig = factory.createHorizontalLine(label + "big", bar.getClose() + shrinkedZoneBelly);
                 hLineBig.setColor(Color.BLUE);
                 hLineBig.setLineStyle(LineStyle.DOT);
                 openedChart.add(hLineBig);
@@ -440,10 +438,10 @@ public class LastKiss3 implements IStrategy {
             
         
         long spaceHorizontal = myPeriod.getInterval();
-        double spaceVertical = myInstrument.getPipValue() * 3;
+        double spaceVertical = myInstrument.getPipValue() * 5;
         IEllipseChartObject ellipse = factory.createEllipse(label, 
-            bar.getTime()-spaceHorizontal, 
-            bar.getClose()-spaceVertical, 
+            bar.getTime() - spaceHorizontal, 
+            bar.getClose() - spaceVertical, 
             bar.getTime() + spaceHorizontal, 
             bar.getClose() + spaceVertical);
         ellipse.setLineWidth(1f);
@@ -467,37 +465,6 @@ public class LastKiss3 implements IStrategy {
             this.crossingBar = crossingBar;
             this.crossedBar = crossedBar;
             this.cross = cross;
-        }
-    }
-    
-    private class Statistics {
-        List<IBar> data;
-    
-        public Statistics(List<IBar> data) 
-        {
-            this.data = data;
-        }   
-    
-        double getMean()
-        {
-            double sum = 0.0;
-            for(IBar a : data)
-                sum += a.getClose();
-            return sum/data.size();
-        }
-    
-        double getVariance()
-        {
-            double mean = getMean();
-            double temp = 0;
-            for(IBar a : data)
-                temp += (mean - a.getClose())*(mean - a.getClose());
-            return temp/data.size();
-        }
-    
-        double getStdDev()
-        {
-            return Math.sqrt(getVariance());
         }
     }
     
