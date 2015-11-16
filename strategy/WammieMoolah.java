@@ -24,8 +24,12 @@ public class WammieMoolah implements IStrategy {
     private int signals;
     private int uniqueOrderCounter = 0;
     private long triggerWaitingTime;
+    private long minWait;
+    private long maxWait;
+    private double zoneBelly;
     
     private ZoneFinder zoneFinder;
+    private WAM wam;
     
     @Configurable(value="Instrument value")
     public Instrument myInstrument = Instrument.EURUSD;
@@ -33,27 +37,19 @@ public class WammieMoolah implements IStrategy {
     public OfferSide myOfferSide = OfferSide.BID;
     @Configurable(value="Period value")
     public Period myPeriod = Period.ONE_HOUR;
-    @Configurable(value="Period to search for zones")
-    public Period myPeriodForZones = Period.ONE_HOUR;
     
     @Configurable("Belly pips")
     public int bellyPips = 50;
     @Configurable("Belly based zone shrink")
     public double zoneShrink = 0.15;
-
-    @Configurable("Bars to check for zones")
-    public int numberOfBars = 300;
-    @Configurable("Nr. of adjacents on check close price")
-    public int adjacents = 3;
-    @Configurable("Nr. of necessary turning points")
-    public int turningPoints = 4;
-    @Configurable("Zone queue length")
-    public int maxAllowedSize = 10;
     @Configurable("Candles to wait for trigger order")
     public int candlesToWaitOrder = 5;
     
-    @Configurable("SL multiplier on belly")
-    public double slMultiplier = 0.5;
+    @Configurable("Min. candles to wait for second touch")
+    public int minCandlesToWaitSecondTouch = 6;
+    @Configurable("Max. candles to wait for second touch")
+    public int maxCandlesToWaitSecondTouch = 25;
+    
     @Configurable("TP multiplier on belly")
     public double tpMultiplier = 1.0;
     
@@ -69,20 +65,20 @@ public class WammieMoolah implements IStrategy {
         if (this.openedChart != null)
             this.factory = openedChart.getChartObjectFactory();
         
-        double zoneBelly = myInstrument.getPipValue()*bellyPips;        
-        zoneFinder = new WammieMoolah.ZoneFinder(
+        zoneBelly = myInstrument.getPipValue()*bellyPips;        
+        zoneFinder = new ZoneFinder(
                 context, 
-                turningPoints, 
-                adjacents, 
-                numberOfBars, 
                 myInstrument, 
                 myOfferSide, 
-                myPeriodForZones, 
+                myPeriod, 
                 zoneBelly, 
                 zoneBelly * zoneShrink
             );
-        
+            
+        wam = null;
         triggerWaitingTime = candlesToWaitOrder * myPeriod.getInterval();
+        minWait = minCandlesToWaitSecondTouch * myPeriod.getInterval();
+        maxWait = maxCandlesToWaitSecondTouch * myPeriod.getInterval();
         
         Set<Instrument> instruments = new HashSet<Instrument>();
         instruments.add(myInstrument);                     
@@ -116,19 +112,100 @@ public class WammieMoolah implements IStrategy {
 
         previousBar = history.getBar(myInstrument, myPeriod, myOfferSide, 1);
         zoneFinder.findZones();
-        
+        findWammie();
     }
     
+    // find wammie and moolah
     
-    
-    // bar helper functions
-        
-    private boolean isBull(IBar bar) {
-        return bar.getOpen() < bar.getClose();
+    private void findWammie() throws JFException {
+        if (wam == null) {
+            for (Zone zone : zoneFinder.getZones()) {
+                if (previousBarTouchesTheZone(zone)) {
+                    wam = new WAM();
+                    wam.crossedZone = zone;
+                    wam.firstTouch = previousBar;
+                    break;
+                }
+            }
+        } else {
+            long firstTouchTime = wam.firstTouch.getTime();
+            if (
+                previousBar.getTime() > firstTouchTime + minWait && 
+                previousBar.getTime() <= firstTouchTime + maxWait && 
+                previousBarTouchesTheZone(wam.crossedZone) &&
+                previousBar.getLow() > wam.firstTouch.getLow()
+                ) {
+                wam.secondTouch = previousBar;
+            } else if (
+                wam.firstTouch != null && 
+                wam.secondTouch != null &&
+                BarHelper.isBull(previousBar)) {
+                
+                placeBuyStop();
+                wam = null;
+                
+            } else if (previousBar.getTime() > firstTouchTime + maxWait) {
+                wam = null;
+            }
+        }
     }
     
-    private boolean isBear(IBar bar) {
-        return !isBull(bar);
+    private boolean previousBarTouchesTheZone(Zone zone) {
+        return (zone.priceIsInTheZone(previousBar.getLow()) || zone.priceIsInTheZone(previousBar.getClose())) && 
+              !(zone.priceIsInTheZone(previousBar.getHigh()) || zone.priceIsInTheZone(previousBar.getOpen()));
+    }
+    
+    // buy-sell functions
+    
+    private void placeBuyStop() throws JFException {
+        if (order == null) {
+            IEngine.OrderCommand myCommand = IEngine.OrderCommand.BUYSTOP;
+    
+            double high = previousBar.getHigh();
+            double stopLossPrice = wam.firstTouch.getLow();
+            double takeProfitPrice = round(high + zoneBelly*tpMultiplier, 4);
+            drawStopOrder(high, stopLossPrice, takeProfitPrice);
+    
+            order = engine.submitOrder("LastKissBuyStop" + uniqueOrderCounter++, 
+                myInstrument, 
+                myCommand, 
+                0.1, 
+                high, 
+                1, 
+                stopLossPrice, 
+                takeProfitPrice, 
+                previousBar.getTime() + triggerWaitingTime);
+        }
+    }
+    
+    private void placeSellStop() throws JFException {
+        if (order == null) {
+            IEngine.OrderCommand myCommand = IEngine.OrderCommand.SELLSTOP;
+    
+            double low = previousBar.getLow();
+            double stopLossPrice = wam.firstTouch.getHigh();
+            double takeProfitPrice = round(low - zoneBelly*tpMultiplier, 4);
+            drawStopOrder(low, stopLossPrice, takeProfitPrice);
+            
+            order = engine.submitOrder("LastKissSellStop" + uniqueOrderCounter++, 
+                myInstrument, 
+                myCommand, 
+                0.1, 
+                low, 
+                1, 
+                stopLossPrice, 
+                takeProfitPrice, 
+                previousBar.getTime() + triggerWaitingTime);
+        }
+    }
+    
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+    
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
     
     // helper methods
@@ -137,17 +214,21 @@ public class WammieMoolah implements IStrategy {
         console.getOut().println(toPrint);
     }
     
-    // draw functions
+    private void printMeError(Object o){
+        console.getErr().println(o);
+    }
     
-    private void drawUpOrDown(String name) {
+    // draw functions
+        
+    private void drawZoneCrossSignal() {
         if (this.openedChart == null)
             return;
             
         double space = myInstrument.getPipValue() * 2;
-        IChartDependentChartObject signal = isBull(previousBar)
+        IChartDependentChartObject signal = BarHelper.isBull(previousBar)
                 ? factory.createSignalUp("signalUpKey" + signals++, previousBar.getTime(), previousBar.getLow() - space)
                 : factory.createSignalDown("signalDownKey" + signals++, previousBar.getTime(), previousBar.getHigh() + space);
-        signal.setText(name + (uniqueOrderCounter - 1));
+        signal.setText("Zone cross");
         openedChart.addToMainChart(signal);
     }
     
@@ -167,6 +248,50 @@ public class WammieMoolah implements IStrategy {
         line.setColor(sell ? Color.RED : Color.GREEN);
         openedChart.addToMainChart(line);
     }
+        
+    private static class BarHelper {
+        public static boolean isBull(IBar bar) {
+            return bar.getOpen() < bar.getClose();
+        }
+        
+        public static boolean isBear(IBar bar) {
+            return !isBull(bar);
+        }
+        
+        public static String barDate(IBar bar) {
+            return (new Date(bar.getTime())).toString();
+        }
+        
+        public static String createUniqueLabel(IBar bar, String prefix) {
+            return prefix + bar.getTime();
+        }
+    }
+    
+    private static class WAM {
+        public Zone crossedZone;
+        public IBar firstTouch;
+        private IBar secondTouch;
+    }
+    
+    private static class Zone {
+        public IBar startingBar;
+        public Double from;
+        public Double to;
+        
+        public Zone(IBar startingBar, Double from, Double to) {
+            this.startingBar = startingBar;
+            this.from = from;
+            this.to = to;
+        }
+        
+        public Double getPrice() {
+            return startingBar.getClose();
+        }
+        
+        public boolean priceIsInTheZone(Double price) {
+            return price >= from && price <= to;
+        }
+    }
     
     private static class ZoneFinder {
     
@@ -175,7 +300,12 @@ public class WammieMoolah implements IStrategy {
         
         private static final String SMALL = "small";
         private static final String BIG = "big";
-        
+
+        private static final int numberOfBars = 300;
+        private static final int adjacents = 5;
+        private static final int turningPoints = 3;
+        private static final int maxAllowedSize = 10;
+                        
         private IEngine engine;
         private IConsole console;
         private IHistory history;
@@ -185,10 +315,6 @@ public class WammieMoolah implements IStrategy {
         private IChart openedChart;
         private IChartObjectFactory factory;
         
-        private int turningPoints;
-        private int adjacents;
-        private int numberOfBars;
-        
         public Instrument myInstrument;
         public OfferSide myOfferSide;
         public Period myPeriodForZones;
@@ -196,52 +322,37 @@ public class WammieMoolah implements IStrategy {
         private double zoneBelly;
         private double shrinkedZoneBelly;
         
-        private List<IBar> resistanceBars;
+        private List<Zone> resistanceBars;
         
         public ZoneFinder(IContext context, 
-                               int turningPoints, 
-                               int adjacents,
-                               int numberOfBars,
                                Instrument myInstrument,
                                OfferSide myOfferSide,
                                Period myPeriodForZones,
                                double zoneBelly,
                                double shrinkedZoneBelly) throws JFException {
             
+            this.context = context;
+            
             this.myInstrument = myInstrument;
             this.myOfferSide = myOfferSide;
-            this.myPeriodForZones = myPeriodForZones;                               
+            this.myPeriodForZones = myPeriodForZones;
+            
+            this.zoneBelly = zoneBelly;
+            this.shrinkedZoneBelly = shrinkedZoneBelly;                        
                                    
             this.engine = context.getEngine();
             this.console = context.getConsole();
             this.history = context.getHistory();
-            this.context = context;
             this.userInterface = context.getUserInterface();
             
             this.openedChart = context.getChart(this.myInstrument);
             if (this.openedChart != null)
                 this.factory = openedChart.getChartObjectFactory();
             
-            this.resistanceBars = new LinkedList<IBar>();
-            this.turningPoints = turningPoints;
-            this.adjacents = adjacents;
-            this.numberOfBars = numberOfBars;
-            
-            this.zoneBelly = zoneBelly;
-            this.shrinkedZoneBelly = shrinkedZoneBelly;
+            this.resistanceBars = new LinkedList<Zone>();
         }
-        
-        
-        
-        public void setZoneBelly(double zoneBelly) {
-            this.zoneBelly = zoneBelly;
-        }
-        
-        public void setShrinkedZoneBelly(double shrinkedZoneBelly) {
-            this.shrinkedZoneBelly = shrinkedZoneBelly;
-        }
-        
-        public List<IBar> getZones() {
+
+        public List<Zone> getZones() {
             return this.resistanceBars;
         }
         
@@ -272,6 +383,7 @@ public class WammieMoolah implements IStrategy {
             List<IBar> retList = new ArrayList<IBar>();
             for (int i = adjacents + 1; i <= numberOfBars; i++) { // we are not interested in the current bar, only in the completed ones
                 IBar bar = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i);
+                double closePrice = bar.getClose();
     
                 boolean smallerTurningPoint = true, biggerTurningPoint = true;
                 
@@ -279,28 +391,17 @@ public class WammieMoolah implements IStrategy {
                     IBar tempBarPrev = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i - j);
                     IBar tempBarNext = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i + j);
                     
-                    if (tempBarPrev.getClose() < bar.getClose() && tempBarNext.getClose() < bar.getClose()) {
-                        continue;
+                    if (tempBarPrev.getClose() < closePrice || tempBarNext.getClose() < closePrice) {
+                        smallerTurningPoint = false;
                     }
-                    smallerTurningPoint = false;
-                    break;
-                }
-                if (!smallerTurningPoint) {
-                    for (int j = 1; j <= adjacents; j++) {
-                        IBar tempBarPrev = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i - j);
-                        IBar tempBarNext = history.getBar(myInstrument, myPeriodForZones, myOfferSide, i + j);
-                        
-                        if (tempBarPrev.getClose() > bar.getClose() && tempBarNext.getClose() > bar.getClose()) {
-                            continue;
-                        }
+                    if (tempBarPrev.getClose() > closePrice || tempBarNext.getClose() > closePrice) {
                         biggerTurningPoint = false;
-                        break;
                     }
                 }
                 
                 if (smallerTurningPoint || biggerTurningPoint) {
                     retList.add(bar);
-                    drawCircleOn(bar);
+                    drawTurningPointSignal(bar);
                 }
             }
             
@@ -308,8 +409,8 @@ public class WammieMoolah implements IStrategy {
         }
         
         private boolean identifiableAsNewZone(IBar barToCheck) {
-            for (IBar tempBar : resistanceBars) {
-                double difference = Math.abs(tempBar.getClose() - barToCheck.getClose());
+            for (Zone tempZone : resistanceBars) {
+                double difference = Math.abs(tempZone.getPrice() - barToCheck.getClose());
                 if (difference < zoneBelly) {
                     return false;
                 }
@@ -320,7 +421,7 @@ public class WammieMoolah implements IStrategy {
         private void addToPriceList(IBar turningPoint) {
             if (resistanceBars.size() >= 10) {
                 if (this.openedChart != null) {
-                    String firstBarLabel = createLabel(resistanceBars.get(0), H_LINE);
+                    String firstBarLabel = BarHelper.createUniqueLabel(resistanceBars.get(0).startingBar, H_LINE);
                     openedChart.remove(firstBarLabel);
                     openedChart.remove(firstBarLabel + SMALL);
                     openedChart.remove(firstBarLabel + BIG);
@@ -328,59 +429,46 @@ public class WammieMoolah implements IStrategy {
                 resistanceBars.remove(0);
             }
             
-            resistanceBars.add(turningPoint);
+            resistanceBars.add(new Zone(turningPoint, 
+                                        turningPoint.getClose() - shrinkedZoneBelly, 
+                                        turningPoint.getClose() + shrinkedZoneBelly));
         }
         
-        private void drawCircleOn(IBar bar) throws JFException {
-            String label = createLabel(bar, CIRCLE);
+        private void drawTurningPointSignal(IBar bar) throws JFException {
+            String label = BarHelper.createUniqueLabel(bar, CIRCLE);
             if (this.openedChart == null || this.openedChart.get(label) != null)
                 return;
                 
-            
-            long spaceHorizontal = myPeriodForZones.getInterval();
-            double spaceVertical = myInstrument.getPipValue() * 5;
-            IEllipseChartObject ellipse = factory.createEllipse(label, 
-                bar.getTime() - spaceHorizontal, 
-                bar.getClose() - spaceVertical, 
-                bar.getTime() + spaceHorizontal, 
-                bar.getClose() + spaceVertical);
-            ellipse.setLineWidth(1f);
-            ellipse.setColor(Color.GREEN);
-            ellipse.setFillColor(Color.YELLOW);
-            openedChart.addToMainChart(ellipse);
+            double space = myInstrument.getPipValue() * 2;
+            IChartDependentChartObject signal = factory.createSignalUp(label, bar.getTime(), bar.getClose());
+            signal.setText("TP");
+            signal.setColor(Color.GRAY);
+            openedChart.addToMainChart(signal);
         }
         
          private void drawPrices() {
             if (this.openedChart == null) 
                 return;
             
-            for (IBar bar : resistanceBars) {
-                String label = createLabel(bar, H_LINE);
+            for (Zone zone : resistanceBars) {
+                String label = BarHelper.createUniqueLabel(zone.startingBar, H_LINE);
                 if (openedChart.get(label) == null) {
-                    IHorizontalLineChartObject hLine = factory.createHorizontalLine(label, bar.getClose());
+                    IHorizontalLineChartObject hLine = factory.createHorizontalLine(label, zone.getPrice());
                     hLine.setColor(Color.RED);
-                    hLine.setText(barDate(bar));
+                    hLine.setText(BarHelper.barDate(zone.startingBar));
                     openedChart.add(hLine);
                     
-                    IHorizontalLineChartObject hLineSmall = factory.createHorizontalLine(label + SMALL, bar.getClose() - shrinkedZoneBelly);
+                    IHorizontalLineChartObject hLineSmall = factory.createHorizontalLine(label + SMALL, zone.from);
                     hLineSmall.setColor(Color.BLUE);
                     hLineSmall.setLineStyle(LineStyle.DOT);
                     openedChart.add(hLineSmall);
                     
-                    IHorizontalLineChartObject hLineBig = factory.createHorizontalLine(label + BIG, bar.getClose() + shrinkedZoneBelly);
+                    IHorizontalLineChartObject hLineBig = factory.createHorizontalLine(label + BIG, zone.to);
                     hLineBig.setColor(Color.BLUE);
                     hLineBig.setLineStyle(LineStyle.DOT);
                     openedChart.add(hLineBig);
                 }
             }
-        }
-        
-        private String createLabel(IBar bar, String prefix) {
-            return prefix + bar.getTime();
-        }
-        
-        private String barDate(IBar bar) {
-            return (new Date(bar.getTime())).toString();
         }
     }
 }
