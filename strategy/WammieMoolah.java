@@ -36,10 +36,10 @@ public class WammieMoolah implements IStrategy {
     @Configurable(value="Offer Side value", obligatory=true)
     public OfferSide myOfferSide = OfferSide.BID;
     @Configurable(value="Period value")
-    public Period myPeriod = Period.ONE_HOUR;
+    public Period myPeriod = Period.FOUR_HOURS;
     
     @Configurable("Belly pips")
-    public int bellyPips = 50;
+    public int bellyPips = 140;
     @Configurable("Belly based zone shrink")
     public double zoneShrink = 0.15;
     @Configurable("Candles to wait for trigger order")
@@ -51,7 +51,7 @@ public class WammieMoolah implements IStrategy {
     public int maxCandlesToWaitSecondTouch = 25;
     
     @Configurable("TP multiplier on belly")
-    public double tpMultiplier = 1.0;
+    public double tpMultiplier = 1.2;
     
     public void onStart(IContext context) throws JFException {
         this.engine = context.getEngine();
@@ -112,47 +112,85 @@ public class WammieMoolah implements IStrategy {
 
         previousBar = history.getBar(myInstrument, myPeriod, myOfferSide, 1);
         zoneFinder.findZones();
-        findWammie();
+        findWammieAndMoolah();
     }
     
     // find wammie and moolah
     
-    private void findWammie() throws JFException {
+    private void findWammieAndMoolah() throws JFException {
         if (wam == null) {
             for (Zone zone : zoneFinder.getZones()) {
-                if (previousBarTouchesTheZone(zone)) {
+                if (wammieTouchesTheZone(zone)) {
                     wam = new WAM();
+                    wam.wamType = WAMType.WAMMIE;
                     wam.crossedZone = zone;
                     wam.firstTouch = previousBar;
+                    drawZoneCrossSignal();
+                    break;
+                }
+                if (moolahTouchesTheZone(zone)) {
+                    wam = new WAM();
+                    wam.wamType = WAMType.MOOLAH;
+                    wam.crossedZone = zone;
+                    wam.firstTouch = previousBar;
+                    drawZoneCrossSignal();
                     break;
                 }
             }
         } else {
             long firstTouchTime = wam.firstTouch.getTime();
-            if (
-                previousBar.getTime() > firstTouchTime + minWait && 
-                previousBar.getTime() <= firstTouchTime + maxWait && 
-                previousBarTouchesTheZone(wam.crossedZone) &&
-                previousBar.getLow() > wam.firstTouch.getLow()
-                ) {
-                wam.secondTouch = previousBar;
-            } else if (
-                wam.firstTouch != null && 
-                wam.secondTouch != null &&
-                BarHelper.isBull(previousBar)) {
-                
-                placeBuyStop();
-                wam = null;
-                
-            } else if (previousBar.getTime() > firstTouchTime + maxWait) {
-                wam = null;
+            if (wam.wamType == WAMType.WAMMIE) {
+                if (
+                    previousBar.getTime() > firstTouchTime + minWait && 
+                    previousBar.getTime() <= firstTouchTime + maxWait && 
+                    wammieTouchesTheZone(wam.crossedZone) &&
+                    previousBar.getLow() > wam.firstTouch.getLow()
+                    ) {
+                    wam.secondTouch = previousBar;
+                    drawZoneCrossSignal();
+                } else if (
+                    wam.firstTouch != null && 
+                    wam.secondTouch != null &&
+                    BarHelper.isBull(previousBar)) {
+                    
+                    placeBuyStop();
+                    wam = null;
+                    
+                } else if (previousBar.getTime() > firstTouchTime + maxWait || wam.crossedZone.priceIsBelowTheZone(previousBar.getHigh())) {
+                    wam = null;
+                }
+            } else if (wam.wamType == WAMType.MOOLAH) {
+                if (
+                    previousBar.getTime() > firstTouchTime + minWait && 
+                    previousBar.getTime() <= firstTouchTime + maxWait && 
+                    moolahTouchesTheZone(wam.crossedZone) &&
+                    previousBar.getHigh() < wam.firstTouch.getHigh()
+                    ) {
+                    wam.secondTouch = previousBar;
+                    drawZoneCrossSignal();
+                } else if (
+                    wam.firstTouch != null && 
+                    wam.secondTouch != null &&
+                    BarHelper.isBear(previousBar)) {
+                    
+                    placeSellStop();
+                    wam = null;
+                    
+                } else if (previousBar.getTime() > firstTouchTime + maxWait || wam.crossedZone.priceIsAboveTheZone(previousBar.getLow())) {
+                    wam = null;
+                }
             }
         }
     }
     
-    private boolean previousBarTouchesTheZone(Zone zone) {
+    private boolean wammieTouchesTheZone(Zone zone) {
         return (zone.priceIsInTheZone(previousBar.getLow()) || zone.priceIsInTheZone(previousBar.getClose())) && 
               !(zone.priceIsInTheZone(previousBar.getHigh()) || zone.priceIsInTheZone(previousBar.getOpen()));
+    }
+    
+    private boolean moolahTouchesTheZone(Zone zone) {
+        return (zone.priceIsInTheZone(previousBar.getHigh()) || zone.priceIsInTheZone(previousBar.getOpen())) && 
+              !(zone.priceIsInTheZone(previousBar.getLow()) || zone.priceIsInTheZone(previousBar.getClose()));
     }
     
     // buy-sell functions
@@ -228,7 +266,6 @@ public class WammieMoolah implements IStrategy {
         IChartDependentChartObject signal = BarHelper.isBull(previousBar)
                 ? factory.createSignalUp("signalUpKey" + signals++, previousBar.getTime(), previousBar.getLow() - space)
                 : factory.createSignalDown("signalDownKey" + signals++, previousBar.getTime(), previousBar.getHigh() + space);
-        signal.setText("Zone cross");
         openedChart.addToMainChart(signal);
     }
     
@@ -267,10 +304,15 @@ public class WammieMoolah implements IStrategy {
         }
     }
     
+    private static enum WAMType {
+        WAMMIE, MOOLAH;
+    }
+    
     private static class WAM {
         public Zone crossedZone;
         public IBar firstTouch;
-        private IBar secondTouch;
+        public IBar secondTouch;
+        public WAMType wamType;
     }
     
     private static class Zone {
@@ -290,6 +332,14 @@ public class WammieMoolah implements IStrategy {
         
         public boolean priceIsInTheZone(Double price) {
             return price >= from && price <= to;
+        }
+        
+        public boolean priceIsBelowTheZone(Double price) {
+            return price < from;
+        }
+        
+        public boolean priceIsAboveTheZone(Double price) {
+            return price > to;
         }
     }
     
@@ -410,7 +460,7 @@ public class WammieMoolah implements IStrategy {
         
         private boolean identifiableAsNewZone(IBar barToCheck) {
             for (Zone tempZone : resistanceBars) {
-                double difference = Math.abs(tempZone.getPrice() - barToCheck.getClose());
+                double difference = Math.abs(tempZone.getClose() - barToCheck.getClose());
                 if (difference < zoneBelly) {
                     return false;
                 }
