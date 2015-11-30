@@ -6,9 +6,7 @@
 #property copyright "Farago Balazs"
 #property link      "https://www.mql5.com"
 #property version   "1.00"
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 class MqlRatesDynamicArray
   {
 private:
@@ -16,59 +14,38 @@ private:
    int               m_ReservedSize; // Actual size of the array
    int               m_Size;         // Number of active elements in the array
 public:
-   MqlRates          Element[];      // The array proper. It is located in the public section, 
-                                     // so that we can use it directly, if necessary
-   //+------------------------------------------------------------------+
-   //|   Constructor                                                    |
-   //+------------------------------------------------------------------+
-   void MqlRatesDynamicArray(int ChunkSize=1024)
-     {
+   MqlRates          elements[];
+   
+   void MqlRatesDynamicArray(int ChunkSize=1024) {
       m_Size=0;                            // Number of active elements
       m_ChunkSize=ChunkSize;               // Chunk size
       m_ReservedSize=ChunkSize;            // Actual size of the array
-      ArrayResize(Element,m_ReservedSize); // Prepare the array
-     }
-   //+------------------------------------------------------------------+
-   //|   Function for adding an element at the end of array             |
-   //+------------------------------------------------------------------+
-   void AddValue(MqlRates &Value)
-     {
-      m_Size++; // Increase the number of active elements
-      if(m_Size>m_ReservedSize)
-        { // The required number is bigger than the actual array size
-         m_ReservedSize+=m_ChunkSize; // Calculate the new array size
-         ArrayResize(Element,m_ReservedSize); // Increase the actual array size
-        }
-      Element[m_Size-1]=Value; // Add the value
-     }
+      ArrayResize(elements,m_ReservedSize); // Prepare the array
+   }
+   
+   void addValue(MqlRates &Value) {
+      m_Size++;
+      if(m_Size>m_ReservedSize) {
+         m_ReservedSize+=m_ChunkSize;
+         ArrayResize(elements,m_ReservedSize);
+      }
+      elements[m_Size-1]=Value; // Add the value
+   }
      
-   //+------------------------------------------------------------------+
-   //|   Function for adding an element at the end of array             |
-   //+------------------------------------------------------------------+
-   MqlRates DeleteLatest()
-     {
+   MqlRates deleteLatest() {
       m_Size--;
-      MqlRates latest = Element[0];
-      ArrayCopy(Element,Element,0,1);
+      MqlRates latest = elements[0];
+      ArrayCopy(elements,elements,0,1);
       return(latest);
-     }
+   }
 
-   //+------------------------------------------------------------------+
-   //|   Remove all elements from the array                             |
-   //+------------------------------------------------------------------+
-   void Clear()
-     {
+   void clear() {
       m_Size=0;
       m_ReservedSize = m_ChunkSize;
-      ArrayResize(Element,m_ReservedSize);
-     }
+      ArrayResize(elements,m_ReservedSize);
+   }
 
-   //+------------------------------------------------------------------+
-   //|   Function for getting the number of active elements in the array|
-   //+------------------------------------------------------------------+
-   int Size()
-     {
+   int size() {
       return(m_Size);
-     }
-  };
-//+------------------------------------------------------------------+
+   }
+};

@@ -9,13 +9,16 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+
+#include "Zone\Zone.mqh"
+
 class WAM
   {
 
 private:
 public:
      
-   MqlRates          crossedZone;
+   Zone              crossedZone;
 
    MqlRates          firstTouch;
    MqlRates          secondTouch;
