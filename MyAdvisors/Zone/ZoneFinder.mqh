@@ -87,7 +87,7 @@ const string ZoneFinder::CIRCLE = "circle";
 const string ZoneFinder::SMALL = "small";
 const string ZoneFinder::BIG = "big";
 
-const int ZoneFinder::numberOfBars = 500;
+const int ZoneFinder::numberOfBars = 258;
 const int ZoneFinder::maxAllowedSize = 10;
 
 // Functions

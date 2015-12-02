@@ -13,15 +13,15 @@
 #include "LK.mqh"
 #include "BarHelper.mqh"
 
-input int      bellyPips = 60;                     // Belly pips
-input int      adjacents = 7;                      // Adjacent bars
+input int      bellyPips = 30;                     // Belly pips
+input int      adjacents = 6;                      // Adjacent bars
 input int      turningPoints = 3;                  // Turning points
 
-input int      candlesToWaitOrder = 4;             // Candles to wait for triggering order
+input int      candlesToWaitOrder = 2;             // Candles to wait for triggering order
 input int      minCandlesToWaitSecondTouch=6;      // Candles to wait for kiss (min)
 input int      maxCandlesToWaitSecondTouch=25;     // Candles to wait for kiss (max)
 
-input double   tpMultiplier = 5.0;                // TP multiplier on belly
+input double   tpMultiplier = 9.0;                // TP multiplier on belly
 input double   lot=0.1;                            // LOT
 
 int            EA_Magic=12346;                     // EA Magic Number
@@ -55,7 +55,7 @@ int OnInit() {
    barHelper=new BarHelper;
 
    if(Bars(_Symbol,_Period) < zoneFinder.numberOfBars) {
-      Alert("We don't have enough bars, EA exits now!");
+      Alert("We don't have enough bars, EA exits now! (", Bars(_Symbol,_Period), ")");
       return(INIT_FAILED);
    } else {
       OnBar();
@@ -99,6 +99,11 @@ void waitForLastKiss() {
          Print("Signal is too old: ", lastKiss.crossingBar.time);
          lastKiss = NULL;
 
+      } else if (
+         (lastKiss.resistanceCross && previousBar.high < lastKiss.crossedZone.from) || 
+         (!lastKiss.resistanceCross && previousBar.low > lastKiss.crossedZone.to)) {
+         Print("Signal was fake: ", lastKiss.crossingBar.time);
+         lastKiss = NULL;
       } else if (shouldOpenTrade()) {
          if (resistanceKissCandleAppeared()) {
             placeBuyStop();
