@@ -13,15 +13,15 @@
 #include "LK.mqh"
 #include "BarHelper.mqh"
 
-input int      bellyPips = 50;                     // Belly pips
-input int      adjacents = 5;                      // Adjacent bars
+input int      bellyPips = 60;                     // Belly pips
+input int      adjacents = 7;                      // Adjacent bars
 input int      turningPoints = 3;                  // Turning points
 
 input int      candlesToWaitOrder = 4;             // Candles to wait for triggering order
 input int      minCandlesToWaitSecondTouch=6;      // Candles to wait for kiss (min)
 input int      maxCandlesToWaitSecondTouch=25;     // Candles to wait for kiss (max)
 
-input double   tpMultiplier = 10.0;                // TP multiplier on belly
+input double   tpMultiplier = 5.0;                // TP multiplier on belly
 input double   lot=0.1;                            // LOT
 
 int            EA_Magic=12346;                     // EA Magic Number
@@ -140,6 +140,7 @@ void searchBreakOutCandle() {
          
          if (crosses(zone)) {
             lastKiss = new LK(zone, previousBar, barHelper.isBull(previousBar));
+            barHelper.drawArrow(previousBar, "LK_Open", clrWhite);
             return;
          }
       }
@@ -161,7 +162,7 @@ void placeBuyStop()
    buildRequest();
    
    double high=previousBar.high;
-   double stopLossPrice=lastKiss.crossingBar.low;
+   double stopLossPrice=lastKiss.crossingBar.low - belly;
    double takeProfitPrice=high+belly*tpMultiplier;
    
    mrequest.price =  NormalizeDouble(high,_Digits);                       // latest ask price
@@ -181,7 +182,7 @@ void placeSellStop()
    buildRequest();
    
    double low=previousBar.low;
-   double stopLossPrice=lastKiss.crossingBar.high;
+   double stopLossPrice=lastKiss.crossingBar.high + belly;
    double takeProfitPrice=low - belly*tpMultiplier;
    
    mrequest.price = NormalizeDouble(low,_Digits);

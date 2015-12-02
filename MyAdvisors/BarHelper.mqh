@@ -25,7 +25,7 @@ public:
       return !isBear(bar);
    }
      
-   void drawArrow(MqlRates& bar, string prefix) {
+   void drawArrow(MqlRates& bar, string prefix, color col = clrRed) {
       bool isBull = isBull(bar);
       string label = prefix + bar.time;
       if (ObjectFind(0, label) < 0) {
@@ -35,6 +35,7 @@ public:
          }
          ObjectSetInteger(0,label,OBJPROP_ARROWCODE,isBull ? 241 : 242);
          ObjectSetInteger(0,label,OBJPROP_TIME,bar.time);
+         ObjectSetInteger(0,label,OBJPROP_COLOR, col);
          ObjectSetDouble(0,label,OBJPROP_PRICE,isBull ? bar.low : bar.high);
          ChartRedraw(0);
       }
