@@ -14,13 +14,13 @@
 #include "BarHelper.mqh"
 
 // setup for EURUSD H1
-input int      bellyPips = 50;                     // Belly pips
-input int      adjacents = 6;                      // Adjacent bars
-input int      turningPoints = 4;                  // Turning points
+input int      bellyPips = 70;                     // Belly pips
+input int      adjacents = 5;                      // Adjacent bars
+input int      turningPoints = 3;                  // Turning points
 input int      candlesToWaitOrder = 4;             // Candles to wait for triggering order
 input int      minCandlesToWaitSecondTouch=6;      // Min. candles to wait for second touch
-input int      maxCandlesToWaitSecondTouch=25;     // Max. candles to wait for second touch
-input double   tpMultiplier = 55.0;                // TP multiplier on belly
+input int      maxCandlesToWaitSecondTouch=40;     // Max. candles to wait for second touch
+input double   tpMultiplier = 10.0;                // TP multiplier on belly
 input double   lot=0.1;                            // LOT
 
 int            EA_Magic=12345;   // EA Magic Number

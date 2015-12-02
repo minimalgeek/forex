@@ -12,23 +12,22 @@
 
 #include "Zone\Zone.mqh"
 
-class WAM {
+class LK {
 
 private:
 public:
      
    Zone              crossedZone;
-
-   MqlRates          firstTouch;
-   MqlRates          secondTouch;
-
-   bool              wammie;
-
-                     WAM() {
-                     
+   MqlRates          crossingBar;
+   bool              resistanceCross; // true: resistance, false: support
+   
+                     LK(Zone& z, MqlRates& bar, bool rc){
+                        this.crossedZone = z;
+                        this.crossingBar = bar;
+                        this.resistanceCross = rc;
                      }
                      
-                     ~WAM() {
+                     ~LK(){
                      
                      }
 };
