@@ -26,7 +26,10 @@ private:
    
    int adjacents;
    int turningPoints;
+   int numberOfBars;
+   
    static const int maxAllowedSize;
+   static const double zoneShrink;
 
    string symbol;
    long period;
@@ -39,6 +42,7 @@ private:
    BarHelper* helper;
    
    void findLocalTurningPoints();
+   void calculateZoneRange();
    bool identifiableAsNewZone(MqlRates& turningPoint);
    void addZone(MqlRates& bar, int nrOfSimilarPoint);
 
@@ -46,12 +50,14 @@ private:
    void drawZoneLines(Zone& bar);
    
 public:
-   static const int numberOfBars;
    
-   ZoneFinder(double zr, int adj, int turnPoint);
+   ZoneFinder(int adj, int turnPoint, int nrob);
    ~ZoneFinder(void);
    
    void findZones();
+   double getZoneRange() {
+      return(zoneRange);
+   }
    ZoneDynamicArray* getZones() {
       return(zones);
    }
@@ -59,7 +65,7 @@ public:
 
 // Constructor and Destructor
 
-ZoneFinder::ZoneFinder(double zr, int adj, int turnPoint) {
+ZoneFinder::ZoneFinder(int adj, int turnPoint, int nrob) {
    ArrayResize(candles, numberOfBars);
    ArraySetAsSeries(candles, true);
    
@@ -67,10 +73,9 @@ ZoneFinder::ZoneFinder(double zr, int adj, int turnPoint) {
    zones = new ZoneDynamicArray;
    helper = new BarHelper;
    
-   this.zoneRange = zr;
-   
    this.adjacents = adj;
    this.turningPoints = turnPoint;
+   this.numberOfBars = nrob;
 }
 
 ZoneFinder::~ZoneFinder()
@@ -87,8 +92,8 @@ const string ZoneFinder::CIRCLE = "circle";
 const string ZoneFinder::SMALL = "small";
 const string ZoneFinder::BIG = "big";
 
-const int ZoneFinder::numberOfBars = 258;
-const int ZoneFinder::maxAllowedSize = 10;
+const int ZoneFinder::maxAllowedSize = 20;
+const double ZoneFinder::zoneShrink = 0.2;
 
 // Functions
 
@@ -99,6 +104,7 @@ ZoneFinder::findZones(void) {
       return;
    }
    
+   calculateZoneRange();
    findLocalTurningPoints();
    
    for (int i = 0; i < localTurningPoints.size(); i++) 
@@ -120,6 +126,17 @@ ZoneFinder::findZones(void) {
          addZone(turningPoint, nrOfSimilarPoint);
       }
    }
+}
+
+void ZoneFinder::calculateZoneRange(){
+   double sum = 0.0;
+   int arraySize = ArraySize(candles);
+   
+   for (int i = 0; i < arraySize; i++) {
+      sum += (candles[i].high - candles[i].low);
+   }
+   
+   this.zoneRange = NormalizeDouble((sum/arraySize)*zoneShrink, _Digits);
 }
 
 void ZoneFinder::addZone(MqlRates& bar, int nrOfSimilarPoint) {
@@ -147,8 +164,18 @@ void ZoneFinder::addZone(MqlRates& bar, int nrOfSimilarPoint) {
 bool ZoneFinder::identifiableAsNewZone(MqlRates& turningPoint) {
    for (int i = 0; i < zones.size(); i++) {
       Zone zoneToCheck = zones.elements[i];
-      if (turningPoint.close > zoneToCheck.from && turningPoint.close < zoneToCheck.to) {
-         return(false);
+      //if (turningPoint.close > zoneToCheck.from && turningPoint.close < zoneToCheck.to) {
+      //   return(false);
+      //}
+      
+      if (turningPoint.close > zoneToCheck.price) {
+         if (turningPoint.close - zoneRange < zoneToCheck.to) {
+            return(false);
+         }
+      } else {
+         if (turningPoint.close + zoneRange > zoneToCheck.from) {
+            return(false);
+         }
       }
  
    }

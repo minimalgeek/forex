@@ -13,14 +13,17 @@
 #include "WAM.mqh"
 #include "BarHelper.mqh"
 
-// setup for EURUSD H1
-input int      bellyPips = 70;                     // Belly pips
+// EURUSD Daily
 input int      adjacents = 5;                      // Adjacent bars
-input int      turningPoints = 3;                  // Turning points
+input int      turningPoints = 2;                  // Turning points
+input int      numberOfBars = 250;                 // Number of lookback candles
+input double   tpMultiplier = 10.0;                // TP multiplier on belly
+
 input int      candlesToWaitOrder = 4;             // Candles to wait for triggering order
+
 input int      minCandlesToWaitSecondTouch=6;      // Min. candles to wait for second touch
 input int      maxCandlesToWaitSecondTouch=40;     // Max. candles to wait for second touch
-input double   tpMultiplier = 10.0;                // TP multiplier on belly
+
 input double   lot=0.1;                            // LOT
 
 int            EA_Magic=12345;   // EA Magic Number
@@ -34,7 +37,6 @@ MqlTick latestPrice;
 MqlTradeRequest mrequest;
 MqlTradeResult mresult;
 
-double belly;
 long triggerWaitingTime,minWait,maxWait;
 
 int OnInit()
@@ -42,7 +44,6 @@ int OnInit()
    Print("=== Wammie started ===");
 
    long periodSeconds=PeriodSeconds(_Period);
-   belly=bellyPips*_Point;
 
    triggerWaitingTime = periodSeconds * candlesToWaitOrder;
    minWait =            periodSeconds * minCandlesToWaitSecondTouch;
@@ -50,11 +51,11 @@ int OnInit()
    
    ObjectsDeleteAll(0);
 
-   zoneFinder=new ZoneFinder(belly,adjacents,turningPoints);
+   zoneFinder=new ZoneFinder(adjacents,turningPoints,numberOfBars);
    wam=NULL;
    barHelper=new BarHelper;
 
-   if(Bars(_Symbol,_Period) < zoneFinder.numberOfBars) {
+   if(Bars(_Symbol,_Period) < numberOfBars) {
       Alert("We don't have enough bars, EA exits now!");
       return(INIT_FAILED);
    } else {
@@ -206,8 +207,8 @@ void placeBuyStop()
    buildRequest();
    
    double high=previousBar.high;
-   double stopLossPrice=wam.firstTouch.low;
-   double takeProfitPrice=high+belly*tpMultiplier;
+   double stopLossPrice=wam.firstTouch.low - zoneFinder.getZoneRange();
+   double takeProfitPrice=high + tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price =  NormalizeDouble(high,_Digits);                       // latest ask price
    mrequest.sl =     NormalizeDouble(stopLossPrice,_Digits);              // Stop Loss
@@ -226,8 +227,8 @@ void placeSellStop()
    buildRequest();
    
    double low=previousBar.low;
-   double stopLossPrice=wam.firstTouch.high;
-   double takeProfitPrice=low - belly*tpMultiplier;
+   double stopLossPrice=wam.firstTouch.high + zoneFinder.getZoneRange();
+   double takeProfitPrice=low - tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price = NormalizeDouble(low,_Digits);
    mrequest.sl = NormalizeDouble(stopLossPrice,_Digits);

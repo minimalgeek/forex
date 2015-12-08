@@ -13,15 +13,15 @@
 #include "LK.mqh"
 #include "BarHelper.mqh"
 
-input int      bellyPips = 30;                     // Belly pips
-input int      adjacents = 6;                      // Adjacent bars
-input int      turningPoints = 3;                  // Turning points
+input int      adjacents = 7;                      // Adjacent bars
+input int      turningPoints = 2;                  // Turning points
+input int      numberOfBars = 250;                 // Number of lookback candles
+input int      tpMultiplier = 20;                  // Take profit multiplier
 
-input int      candlesToWaitOrder = 2;             // Candles to wait for triggering order
-input int      minCandlesToWaitSecondTouch=6;      // Candles to wait for kiss (min)
-input int      maxCandlesToWaitSecondTouch=25;     // Candles to wait for kiss (max)
+input int      candlesToWaitOrder = 3;             // Candles to wait for triggering order
+input int      minCandlesToWaitSecondTouch = 2;      // Candles to wait for kiss (min)
+input int      maxCandlesToWaitSecondTouch = 25;     // Candles to wait for kiss (max)
 
-input double   tpMultiplier = 9.0;                // TP multiplier on belly
 input double   lot=0.1;                            // LOT
 
 int            EA_Magic=12346;                     // EA Magic Number
@@ -35,14 +35,12 @@ MqlTick latestPrice;
 MqlTradeRequest mrequest;
 MqlTradeResult mresult;
 
-double belly;
 long triggerWaitingTime,minWait,maxWait;
 
 int OnInit() {
    Print("=== LastKiss started ===");
 
    long periodSeconds=PeriodSeconds(_Period);
-   belly=bellyPips*_Point;
 
    triggerWaitingTime = periodSeconds * candlesToWaitOrder;
    minWait =            periodSeconds * minCandlesToWaitSecondTouch;
@@ -50,11 +48,11 @@ int OnInit() {
    
    ObjectsDeleteAll(0);
 
-   zoneFinder=new ZoneFinder(belly,adjacents,turningPoints);
+   zoneFinder=new ZoneFinder(adjacents,turningPoints,numberOfBars);
    lastKiss=NULL;
    barHelper=new BarHelper;
 
-   if(Bars(_Symbol,_Period) < zoneFinder.numberOfBars) {
+   if(Bars(_Symbol,_Period) < numberOfBars) {
       Alert("We don't have enough bars, EA exits now! (", Bars(_Symbol,_Period), ")");
       return(INIT_FAILED);
    } else {
@@ -166,9 +164,9 @@ void placeBuyStop()
    
    buildRequest();
    
-   double high=previousBar.high;
-   double stopLossPrice=lastKiss.crossingBar.low - belly;
-   double takeProfitPrice=high+belly*tpMultiplier;
+   double high = previousBar.high;
+   double stopLossPrice = lastKiss.crossingBar.low - zoneFinder.getZoneRange();
+   double takeProfitPrice = high + tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price =  NormalizeDouble(high,_Digits);                       // latest ask price
    mrequest.sl =     NormalizeDouble(stopLossPrice,_Digits);              // Stop Loss
@@ -186,9 +184,9 @@ void placeSellStop()
    
    buildRequest();
    
-   double low=previousBar.low;
-   double stopLossPrice=lastKiss.crossingBar.high + belly;
-   double takeProfitPrice=low - belly*tpMultiplier;
+   double low = previousBar.low;
+   double stopLossPrice = lastKiss.crossingBar.high + zoneFinder.getZoneRange();
+   double takeProfitPrice = low - tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price = NormalizeDouble(low,_Digits);
    mrequest.sl = NormalizeDouble(stopLossPrice,_Digits);

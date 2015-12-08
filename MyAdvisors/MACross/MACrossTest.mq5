@@ -96,20 +96,12 @@ void OnBar() {
    CopyBuffer(slowMAHandle, 0, 0, 4, slowBuffer);
    CopyBuffer(fastMAHandle, 0, 0, 4, fastBuffer);
 
-   if(slowBuffer[1] > fastBuffer[1] && slowBuffer[2] < fastBuffer[2]) {
-      if (PositionSelect(_Symbol)) {
-         buy();
-      }
-   
+   if(slowBuffer[2] > fastBuffer[2] && slowBuffer[3] < fastBuffer[3]) {
+      closePrevious();
       buy();
-      
-   } else if(slowBuffer[1] < fastBuffer[1] && slowBuffer[2] > fastBuffer[2]) {
-      if (PositionSelect(_Symbol)) {
-         sell();
-      }
-      
+   } else if(slowBuffer[2] < fastBuffer[2] && slowBuffer[3] > fastBuffer[3]) {
+      closePrevious();
       sell();
-      
    }
 }
 
@@ -124,26 +116,22 @@ void explainResult() {
 }
 
 void buy() {
-   double price = latestPrice.ask;
-   
-   trReq.action            = TRADE_ACTION_DEAL;
-   trReq.magic             = MAGIC;
-   trReq.symbol            = _Symbol;
-   trReq.volume            = LOT;
-   trReq.deviation         = 100;
-   trReq.type_filling      = ORDER_FILLING_IOC;
-   trReq.type_time         = ORDER_TIME_GTC;
-   trReq.price             = price;
-   //trReq.sl                = price - slValue;
-   //trReq.tp                = price + tpValue;
+   buildRequest();
+   trReq.price             = latestPrice.ask;
    trReq.type              = ORDER_TYPE_BUY;
    OrderSend(trReq,trRez);
    explainResult();
 }
 
 void sell() {
-   double price = latestPrice.bid;
+   buildRequest();
+   trReq.price             = latestPrice.bid;
+   trReq.type              = ORDER_TYPE_SELL;
+   OrderSend(trReq,trRez);
+   explainResult();
+}
 
+void buildRequest() {
    trReq.action            = TRADE_ACTION_DEAL;
    trReq.magic             = MAGIC;
    trReq.symbol            = _Symbol;
@@ -151,10 +139,17 @@ void sell() {
    trReq.deviation         = 100;
    trReq.type_filling      = ORDER_FILLING_IOC;
    trReq.type_time         = ORDER_TIME_GTC;
-   trReq.price             = price;
-   //trReq.sl                = price + slValue;
-   //trReq.tp                = price - tpValue;
-   trReq.type              = ORDER_TYPE_SELL;
-   OrderSend(trReq,trRez);
-   explainResult();
+}
+
+void closePrevious(){
+   if (PositionSelect(Symbol())) {
+      CTrade trade;
+      trade.SetTypeFilling(ORDER_FILLING_IOC);
+      trade.PositionClose(Symbol(),ULONG_MAX);
+      Print("Trade is closed at ",trade.ResultPrice());
+      Print("c-> Deal ticket: ",trade.ResultDeal());
+      Print("c-> Trade return code: ",trade.ResultRetcode(),"=",trade.ResultRetcodeDescription());
+   } else {
+      Print("The trade was not opened.");
+   }
 }
