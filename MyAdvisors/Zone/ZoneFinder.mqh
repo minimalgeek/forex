@@ -27,9 +27,8 @@ private:
    int adjacents;
    int turningPoints;
    int numberOfBars;
-   
-   static const int maxAllowedSize;
-   static const double zoneShrink;
+   int maxAllowedSize;
+   double zoneShrink;
 
    string symbol;
    long period;
@@ -51,7 +50,7 @@ private:
    
 public:
    
-   ZoneFinder(int adj, int turnPoint, int nrob);
+   ZoneFinder(int adj, int turnPoint, int nrob, int mas, double zs);
    ~ZoneFinder(void);
    
    void findZones();
@@ -65,7 +64,7 @@ public:
 
 // Constructor and Destructor
 
-ZoneFinder::ZoneFinder(int adj, int turnPoint, int nrob) {
+ZoneFinder::ZoneFinder(int adj, int turnPoint, int nrob, int mas, double zs) {
    ArrayResize(candles, numberOfBars);
    ArraySetAsSeries(candles, true);
    
@@ -76,6 +75,8 @@ ZoneFinder::ZoneFinder(int adj, int turnPoint, int nrob) {
    this.adjacents = adj;
    this.turningPoints = turnPoint;
    this.numberOfBars = nrob;
+   this.maxAllowedSize = mas;
+   this.zoneShrink = zs;
 }
 
 ZoneFinder::~ZoneFinder()
@@ -91,9 +92,6 @@ const string ZoneFinder::H_LINE = "hLine";
 const string ZoneFinder::CIRCLE = "circle";
 const string ZoneFinder::SMALL = "small";
 const string ZoneFinder::BIG = "big";
-
-const int ZoneFinder::maxAllowedSize = 20;
-const double ZoneFinder::zoneShrink = 0.2;
 
 // Functions
 

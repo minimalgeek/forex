@@ -14,10 +14,14 @@
 #include "BarHelper.mqh"
 
 // EURUSD Daily
-input int      adjacents = 5;                      // Adjacent bars
+input int      adjacents = 4;                      // Adjacent bars
 input int      turningPoints = 2;                  // Turning points
 input int      numberOfBars = 250;                 // Number of lookback candles
-input double   tpMultiplier = 10.0;                // TP multiplier on belly
+input int      maxAllowedSize = 13;                // Max allowed size of zones *
+input double   zoneShrink = 0.2;                   // Zone shrink multiplier *
+
+input double   tpMultiplier = 15.0;                // TP multiplier on belly
+input double   slMultiplier = 5.0;                 // SL multiplier on belly
 
 input int      candlesToWaitOrder = 4;             // Candles to wait for triggering order
 
@@ -51,7 +55,7 @@ int OnInit()
    
    ObjectsDeleteAll(0);
 
-   zoneFinder=new ZoneFinder(adjacents,turningPoints,numberOfBars);
+   zoneFinder=new ZoneFinder(adjacents, turningPoints, numberOfBars, maxAllowedSize, zoneShrink);
    wam=NULL;
    barHelper=new BarHelper;
 
@@ -207,7 +211,7 @@ void placeBuyStop()
    buildRequest();
    
    double high=previousBar.high;
-   double stopLossPrice=wam.firstTouch.low - zoneFinder.getZoneRange();
+   double stopLossPrice=wam.firstTouch.low - slMultiplier * zoneFinder.getZoneRange();
    double takeProfitPrice=high + tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price =  NormalizeDouble(high,_Digits);                       // latest ask price
@@ -227,7 +231,7 @@ void placeSellStop()
    buildRequest();
    
    double low=previousBar.low;
-   double stopLossPrice=wam.firstTouch.high + zoneFinder.getZoneRange();
+   double stopLossPrice=wam.firstTouch.high + slMultiplier * zoneFinder.getZoneRange();
    double takeProfitPrice=low - tpMultiplier * zoneFinder.getZoneRange();
    
    mrequest.price = NormalizeDouble(low,_Digits);
